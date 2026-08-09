@@ -87,7 +87,15 @@ Deno.serve(async (req) => {
       html = await safeFetchPage(company_url);
     } catch (err) {
       await adminClient.from('workspaces').update({ onboarding_status: 'pending' }).eq('id', workspaceId);
-      return jsonResponse({ error: 'Could not read that website. Check the address and try again.' }, 400);
+      const reason = err instanceof Error ? err.message : 'unknown';
+      console.error('scrape fetch failed:', reason, 'url:', company_url);
+      // Safe reasons can be shown; anything else stays generic so the
+      // endpoint is not usable as an internal-network probe.
+      const safe = ['invalid url','protocol not allowed','not html','too many redirects'];
+      const msg = safe.includes(reason)
+        ? `Could not read that website (${reason}). Use a full https:// address.`
+        : 'Could not read that website. Check the address and try again.';
+      return jsonResponse({ error: msg }, 400);
     }
 
     const candidates = extractCandidates(html, company_url);
@@ -176,15 +184,22 @@ async function assertPublicHost(hostname: string) {
   if (lower === 'localhost' || lower.endsWith('.localhost') || lower.endsWith('.internal') || lower.endsWith('.local')) {
     throw new Error('blocked host');
   }
-  let records: Deno.ResolveDnsResponse;
-  try {
-    records = await Deno.resolveDns(clean, 'A');
-  } catch {
-    throw new Error('unresolvable host');
+  // DNS-level validation where the runtime supports it. Supabase Edge
+  // Functions (Deno Deploy) do not expose Deno.resolveDns, so this is
+  // best-effort: unavailability must not block legitimate scrapes, since
+  // protocol, port, credential and literal-IP checks above still apply.
+  const resolver = (Deno as unknown as { resolveDns?: (h: string, t: string) => Promise<string[]> }).resolveDns;
+  if (typeof resolver === 'function') {
+    try {
+      const ips = await resolver(clean, 'A');
+      if (ips && ips.length) {
+        for (const ip of ips) if (isBlockedIp(ip)) throw new Error('blocked host');
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message === 'blocked host') throw e;
+      // resolver unsupported or transient failure — continue with other guards
+    }
   }
-  const ips = records as unknown as string[];
-  if (!ips.length) throw new Error('unresolvable host');
-  for (const ip of ips) if (isBlockedIp(ip)) throw new Error('blocked host');
 }
 
 async function safeFetchPage(rawUrl: string): Promise<string> {
