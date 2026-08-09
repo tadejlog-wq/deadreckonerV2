@@ -33,7 +33,14 @@ function getClient() {
   if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
     console.warn('supabase-client.js: placeholder credentials still in place — backend calls will fail until these are set.');
   }
-  _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    }
+  });
   return _client;
 }
 
