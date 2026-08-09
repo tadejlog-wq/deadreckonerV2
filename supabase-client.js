@@ -192,6 +192,34 @@ async function dbSubmitSignup(email) {
   return { data: true };
 }
 
+
+// ── SESSION READINESS ─────────────────────────────────────
+// After OAuth the session arrives in the URL and is resolved
+// asynchronously. Anything that depends on "is the user signed in"
+// must await this, or it will see null and wrongly conclude no.
+let _sessionReady = null;
+function waitForSession() {
+  if (_sessionReady) return _sessionReady;
+  _sessionReady = new Promise((resolve) => {
+    const client = getClient();
+    if (!client) { resolve(null); return; }
+    let done = false;
+    const finish = (s) => { if (!done) { done = true; resolve(s); } };
+    const { data: sub } = client.auth.onAuthStateChange((event, session) => {
+      if (['INITIAL_SESSION','SIGNED_IN','TOKEN_REFRESHED','SIGNED_OUT'].includes(event)) {
+        finish(session || null);
+        if (sub && sub.subscription) sub.subscription.unsubscribe();
+      }
+    });
+    setTimeout(async () => {
+      if (done) return;
+      const { data } = await client.auth.getSession();
+      finish((data && data.session) || null);
+    }, 4000);
+  });
+  return _sessionReady;
+}
+
 // ── EVENT LOGGING ─────────────────────────────────────────
 // Fire-and-forget: log every meaningful action for the events table.
 // Never awaited by callers — logging failures should never block the UI.
@@ -330,6 +358,7 @@ async function dbReviewScrapeCandidate(candidateId, decision) {
 // Expose on window so existing inline scripts can call these without a bundler.
 window.deadreckonerDB = {
   getClient,
+  waitForSession,
   submitRequest: dbSubmitRequest,
   loadRequests: dbLoadRequests,
   updateRequestStatus: dbUpdateRequestStatus,

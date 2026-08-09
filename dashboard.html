@@ -3671,13 +3671,19 @@
   const skipBtn = document.querySelector('#obSkip');
 
   async function maybeShowOnboarding(){
+    // Wait for supabase-client.js to register.
+    let tries = 0;
+    while (!window.deadreckonerDB && tries < 60) {
+      await new Promise(r => setTimeout(r, 50));
+      tries++;
+    }
     if (!window.deadreckonerDB) return;
-    const client = window.deadreckonerDB.getClient();
-    if (!client) return;
-    const { data } = await client.auth.getUser();
-    const user = data?.user;
-    if (!user) return; // not signed in — nothing to onboard yet
-    if (user.app_metadata?.workspace_id) return; // already has a workspace, skip onboarding
+
+    // Must wait for the session to resolve from the URL after OAuth,
+    // otherwise getUser() returns null on a freshly signed-in user.
+    const session = await window.deadreckonerDB.waitForSession();
+    if (!session || !session.user) return;
+    if (session.user.app_metadata && session.user.app_metadata.workspace_id) return;
     backdrop.classList.add('open');
   }
 
