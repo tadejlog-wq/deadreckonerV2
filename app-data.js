@@ -80,12 +80,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── 3. Clear demo table rows, show honest empty states ────
+  // Screening tables must show real submissions, not just be emptied.
+  let liveSubs = [];
+  if (wsId) {
+    try {
+      const { data } = await client.from('asset_submissions')
+        .select('id,slot_name,category,status,created_at')
+        .eq('workspace_id', wsId).order('created_at', { ascending: false });
+      liveSubs = data || [];
+    } catch (e) { /* none */ }
+  }
+  window.__drSubmissions = liveSubs;
+
   document.querySelectorAll('table tbody').forEach((tb) => {
-    const cols = tb.closest('table').querySelectorAll('thead th').length || 6;
-    tb.innerHTML =
-      `<tr><td colspan="${cols}" style="padding:32px 14px;text-align:center;` +
-      `color:var(--text-muted,#7A8087);font-size:13px;">Nothing here yet. ` +
-      `Assets you upload will appear once submitted.</td></tr>`;
+    const table = tb.closest('table');
+    if (table.closest('[data-static]')) return;
+    const cols = table.querySelectorAll('thead th').length || 6;
+    const pending = liveSubs.filter((s) => s.status === 'pending');
+    if (!pending.length) {
+      tb.innerHTML =
+        `<tr><td colspan="${cols}" style="padding:32px 14px;text-align:center;` +
+        `color:var(--text-muted,#7A8087);font-size:13px;">Nothing here yet. ` +
+        `Assets you upload will appear once submitted.</td></tr>`;
+      return;
+    }
+    const safe = (s) => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+    tb.innerHTML = pending.map((s) => {
+      const when = s.created_at ? new Date(s.created_at).toLocaleDateString('en-GB',
+        { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase() : '';
+      return `<tr class="submission-row" data-submission-id="${s.id}" style="cursor:pointer">` +
+             `<td class="table-status"><span class="status-dot dot-pending">&bull;</span></td>` +
+             `<td>${safe(s.slot_name || 'Untitled')}</td>` +
+             `<td>${safe(s.category || '—')}</td>` +
+             `<td>—</td>` +
+             `<td>You</td>` +
+             `<td>${when}</td>` +
+             `<td class="row-actions" data-admin-only>` +
+             `<button class="action-approve" type="button" data-sub-approve="${s.id}">Approve</button>` +
+             `<button class="action-reject" type="button" data-sub-reject="${s.id}">Reject</button>` +
+             `</td></tr>`;
+    }).join('');
+  });
+
+  document.querySelectorAll('*').forEach((el) => {
+    if (el.children.length === 0 && /^Showing \d+ of \d+ assets$/.test((el.textContent || '').trim())) {
+      const n = liveSubs.filter((s) => s.status === 'pending').length;
+      el.textContent = `Showing ${n} of ${n} assets`;
+    }
   });
   // Render real requests into their matching tab panels. Counting them but
   // showing "none" was the bug: the tab said 01 while the panel said empty.
@@ -220,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     brandSections.forEach((id) => {
       const sec = document.getElementById(id);
-      if (!sec) return;
+      if (!sec || sec.hasAttribute('data-static')) return;
       // Keep the section heading; clear only the demo body beneath it.
       Array.from(sec.children).forEach((child) => {
         if (child.querySelector && child.querySelector('.section-title')) return;
@@ -278,16 +319,29 @@ document.addEventListener('DOMContentLoaded', async () => {
           msg = `Your trial has ended · ${seatTxt}`;
         }
         if (msg) {
+          // Sits above the topbar, not at the bottom where the floating
+          // nav was covering it.
           const bar = document.createElement('div');
           bar.setAttribute('role', 'status');
+          bar.id = 'drTrialBar';
           bar.style.cssText =
-            'position:fixed;left:0;right:0;bottom:0;z-index:45;padding:9px 16px;' +
+            'position:fixed;left:0;right:0;top:0;z-index:80;padding:7px 16px;' +
             'text-align:center;font-size:12px;letter-spacing:.02em;' +
-            'background:rgba(20,176,160,.10);color:var(--teal,#14B0A0);' +
-            'border-top:1px solid rgba(20,176,160,.28);backdrop-filter:blur(12px);';
+            'background:rgba(20,176,160,.12);color:var(--teal,#14B0A0);' +
+            'border-bottom:1px solid rgba(20,176,160,.28);' +
+            'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);';
           bar.innerHTML = msg +
-            ' · <a href="index.html#pricing" style="color:inherit;text-decoration:underline;">View plans</a>';
+            ' &middot; <a href="index.html#pricing" style="color:inherit;text-decoration:underline">View plans</a>';
           document.body.appendChild(bar);
+
+          // Push the fixed topbar and page content down so nothing is hidden.
+          const h = 30;
+          const tb = document.querySelector('.topbar');
+          if (tb) tb.style.top = h + 'px';
+          const main = document.querySelector('.app-main');
+          if (main) {
+            main.style.paddingTop = 'calc(var(--topbar-height, 56px) + ' + (h + 12) + 'px)';
+          }
         }
       }
     } catch (e) { /* plan table not migrated yet — skip silently */ }
@@ -347,12 +401,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.querySelectorAll('.category-count').forEach((el) => { el.textContent = '0'; });
 
-  // Pagination footers that claim rows we no longer show.
-  document.querySelectorAll('*').forEach((el) => {
-    if (el.children.length === 0 && /^Showing \d+ of \d+ assets$/.test((el.textContent || '').trim())) {
-      el.textContent = 'Showing 0 of 0 assets';
-    }
-  });
 
   // ── 10. Brand identity radar reflects real category progress ──
   const radar = document.querySelector('.radar-svg, .radar-body svg');

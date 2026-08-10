@@ -3027,7 +3027,7 @@
 
   <header class="topbar">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
-      <img src="favicon.png" alt="" aria-hidden="true">
+      <img src="logo-mark-white.png" alt="" aria-hidden="true">
       <span>Deadreckoner</span>
     </a>
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -3036,26 +3036,6 @@
       <span class="breadcrumb-current">Account</span>
     </nav>
     <div class="topbar-spacer"></div>
-    <label class="search-shell">
-      <span class="sr-only">Search assets</span>
-      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="10.5" cy="10.5" r="6.5"></circle>
-        <path d="m15.5 15.5 5 5"></path>
-      </svg>
-      <input class="search-input" id="globalSearch" type="search" placeholder="Search assets…" autocomplete="off">
-      <span class="shortcut-hint">⌘K</span>
-    </label>
-    <div class="sync-pill" aria-label="Workspace is synced">
-      <span class="sync-dot" aria-hidden="true"></span>
-      <span class="sync-label">Synced</span>
-    </div>
-    <button class="notification-button" type="button" aria-label="Open notifications">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6.5 9a5.5 5.5 0 0 1 11 0v4.2l1.7 2.8H4.8l1.7-2.8V9Z"></path>
-        <path d="M10 19h4"></path>
-      </svg>
-      <span class="notification-dot" aria-hidden="true"></span>
-    </button>
   </header>
 
   <main id="main-content" class="app-main">
@@ -3185,6 +3165,7 @@
       </div>
     </section>
 
+    <section class="prof-panel"><p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#F2F4F5">Your assets</p><p style="margin:0 0 12px;font-size:12px;color:#7A8087">Grouped by category. Open a folder to download.</p><div id="dr-folders"></div></section>
     <section class="prof-panel danger-panel">
       <p class="danger-title">Danger zone</p>
       <p class="danger-copy">This permanently deletes all brand data, assets, and history.</p>
@@ -3534,6 +3515,8 @@
 <script defer src="app-data.js"></script>
 <script defer src="app-actions.js"></script>
 <script defer src="privacy-controls.js"></script>
+<script defer src="dr-folders.js"></script>
+<script defer src="dr-wire.js"></script>
 
 <style>
   .invite-shell { --accent:#14B0A0; --euca:#6B9E87; --clay:#B87A6A; --line:rgba(255,255,255,.08); }

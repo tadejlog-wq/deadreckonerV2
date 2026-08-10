@@ -3151,6 +3151,28 @@
     .scrape-card.processed { opacity: .35; pointer-events: none; }
   
     .skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:#14B0A0;color:#07110f;font-weight:600;font-size:14px;border-radius:0 0 6px 0;text-decoration:none}.skip-link:focus{left:0}
+
+    /* ── Quality gates + approval flow ── */
+    .gate-grid { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
+    .gate-row { display: grid; grid-template-columns: 1.1fr 1.4fr 1.5fr; gap: 14px; padding: 12px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.055); font-size: 13px; color: var(--text-secondary); }
+    .gate-row:last-child { border-bottom: 0; }
+    .gate-row.gate-head { font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
+      letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); }
+    .gate-row span:first-child { color: var(--text-primary); }
+    .flow-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px; }
+    .flow-step { position: relative; padding: 16px 14px; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--card-radius); background: rgba(255,255,255,0.015); }
+    .flow-step:not(:last-child)::after { content: ""; position: absolute; top: 30px; right: -6px;
+      width: 6px; height: 1px; background: rgba(20,176,160,.45); }
+    .flow-dot { display: grid; width: 30px; height: 30px; place-items: center; margin-bottom: 12px;
+      border-radius: 50%; color: var(--teal); background: rgba(20,176,160,.10); }
+    .flow-dot svg { width: 15px; height: 15px; }
+    .flow-name { display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .flow-note { display: block; margin-top: 4px; font-size: 11.5px; line-height: 1.45; color: var(--text-muted); }
+    @media (max-width: 860px) { .flow-track { grid-template-columns: 1fr 1fr; }
+      .flow-step:not(:last-child)::after { display: none; }
+      .gate-row { grid-template-columns: 1fr; gap: 3px; } }
   </style>
 </head>
 <body>
@@ -3159,7 +3181,7 @@
 <aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
 <header class="topbar">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
-      <img src="favicon.png" alt="" aria-hidden="true">
+      <img src="logo-mark-white.png" alt="" aria-hidden="true">
       <span>Deadreckoner</span>
     </a>
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -3168,26 +3190,6 @@
       <span class="breadcrumb-current">Brandbook</span>
     </nav>
     <div class="topbar-spacer"></div>
-    <label class="search-shell">
-      <span class="sr-only">Search assets</span>
-      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="10.5" cy="10.5" r="6.5"></circle>
-        <path d="m15.5 15.5 5 5"></path>
-      </svg>
-      <input class="search-input" id="globalSearch" type="search" placeholder="Search assets…" autocomplete="off">
-      <span class="shortcut-hint">⌘K</span>
-    </label>
-    <div class="sync-pill" aria-label="Workspace is synced">
-      <span class="sync-dot" aria-hidden="true"></span>
-      <span class="sync-label">Synced</span>
-    </div>
-    <button class="notification-button" type="button" aria-label="Open notifications">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6.5 9a5.5 5.5 0 0 1 11 0v4.2l1.7 2.8H4.8l1.7-2.8V9Z"></path>
-        <path d="M10 19h4"></path>
-      </svg>
-      <span class="notification-dot" aria-hidden="true"></span>
-    </button>
   </header>
 
   <main id="main-content" class="app-main">
@@ -3423,6 +3425,52 @@
               <span class="rule-label dont">DON'T. Use filler or jargon.</span>
               <p class="rule-desc">"We wanted to let you know that some items may need your review soon" — vague, passive, wastes attention.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+    
+      <!-- QUALITY GATES + APPROVAL FLOW — static reference, moved here when the
+           governance page was retired. Marked data-static so the real-data
+           layer does not clear it. -->
+      <section class="glass brand-section" id="sec-gates" data-static>
+        <div class="section-num">07</div>
+        <h2 class="section-title">Quality <span class="section-accent">Gates</span></h2>
+        <p class="section-desc">Minimum technical standards an asset must meet before it can be approved. Anything below these is rejected automatically.</p>
+        <div class="gate-grid" data-static>
+          <div class="gate-row gate-head"><span>Category</span><span>Accepted formats</span><span>Rejected when</span></div>
+          <div class="gate-row"><span>Logo</span><span>SVG, EPS, PDF</span><span>Raster-only master</span></div>
+          <div class="gate-row"><span>Photography</span><span>JPG, TIFF, PNG</span><span>Below 2400&nbsp;px wide</span></div>
+          <div class="gate-row"><span>Document</span><span>PDF/X-4</span><span>Missing embedded fonts</span></div>
+          <div class="gate-row"><span>Motion</span><span>MP4, MOV</span><span>Below 1080p</span></div>
+          <div class="gate-row"><span>Audio</span><span>WAV, AIFF</span><span>Below 48&nbsp;kHz</span></div>
+        </div>
+      </section>
+
+      <section class="glass brand-section" id="sec-flow" data-static>
+        <div class="section-num">08</div>
+        <h2 class="section-title">Approval <span class="section-accent">Flow</span></h2>
+        <p class="section-desc">Every asset takes the same path. Nothing reaches the approved library without a human decision.</p>
+        <div class="flow-track" data-static>
+          <div class="flow-step">
+            <span class="flow-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M4 21h16"/></svg></span>
+            <span class="flow-name">Submitted</span>
+            <span class="flow-note">Dropped in, or pulled from your Drive</span>
+          </div>
+          <div class="flow-step">
+            <span class="flow-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></span>
+            <span class="flow-name">AI review</span>
+            <span class="flow-note">Classified and checked against the gates above</span>
+          </div>
+          <div class="flow-step">
+            <span class="flow-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3"/><path d="M6.5 19c.8-3.2 2.6-4.8 5.5-4.8s4.7 1.6 5.5 4.8"/></svg></span>
+            <span class="flow-name">Human review</span>
+            <span class="flow-note">An admin approves or rejects &mdash; never automatic</span>
+          </div>
+          <div class="flow-step">
+            <span class="flow-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+            <span class="flow-name">Locked</span>
+            <span class="flow-note">Versioned into the approved library</span>
           </div>
         </div>
       </section>

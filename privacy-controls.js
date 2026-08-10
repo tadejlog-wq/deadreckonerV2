@@ -59,42 +59,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     msg.textContent = (data && data.note) || 'Your data has been anonymised.';
   });
 
-  // ── Lightweight CES prompt: the framework's strongest churn predictor ──
-  const KEY = 'dr_ces_asked';
-  if (!localStorage.getItem(KEY)) {
-    setTimeout(() => {
-      const bar = document.createElement('div');
-      bar.style.cssText =
-        'position:fixed;right:20px;bottom:92px;z-index:60;width:min(300px,calc(100vw - 40px));' +
-        'padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:10px;' +
-        'background:rgba(22,22,28,.96);backdrop-filter:blur(20px);' +
-        'box-shadow:0 18px 50px rgba(0,0,0,.5);font-size:13px;color:var(--text-primary,#F2F4F5)';
-      bar.innerHTML =
-        '<p style="margin:0 0 10px">How easy was it to get set up?</p>' +
-        '<div id="cesRow" style="display:flex;gap:6px;margin-bottom:8px"></div>' +
-        '<button id="cesSkip" style="border:0;background:none;color:var(--text-muted,#7A8087);' +
-        'font-size:11px;cursor:pointer;padding:0">Not now</button>';
-      document.body.appendChild(bar);
-      const row = bar.querySelector('#cesRow');
-      for (let i = 1; i <= 7; i++) {
-        const b = document.createElement('button');
-        b.textContent = i;
-        b.style.cssText =
-          'flex:1;padding:7px 0;border:1px solid rgba(255,255,255,.12);border-radius:5px;' +
-          'background:transparent;color:inherit;font-size:12px;cursor:pointer';
-        b.addEventListener('click', async () => {
-          localStorage.setItem(KEY, '1');
-          await window.deadreckonerDB.submitFeedback({ kind: 'ces', score: i, context: 'onboarding' });
-          bar.innerHTML = '<p style="margin:0">Thank you — noted.</p>';
-          setTimeout(() => bar.remove(), 1600);
-        });
-        row.appendChild(b);
-      }
-      bar.querySelector('#cesSkip').addEventListener('click', () => {
-        localStorage.setItem(KEY, '1'); bar.remove();
-      });
-    }, 4000);
-  }
 });
 
 // ── Profile photo upload + generated-asset library ──────────
@@ -131,33 +95,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Generated-asset library
-  const left = document.querySelector('.prof-side, .prof-panel');
-  if (!left) return;
-  const wsId = session.user.app_metadata && session.user.app_metadata.workspace_id;
-  let files = [];
-  if (wsId) {
-    try {
-      const { data } = await client.from('asset_submission_files')
-        .select('file_name, storage_path, size_bytes, created_at')
-        .order('created_at', { ascending: false }).limit(20);
-      files = data || [];
-    } catch (e) { /* none */ }
-  }
-  const panel = document.createElement('section');
-  panel.className = 'prof-panel';
-  panel.style.cssText = 'margin-top:16px';
-  panel.innerHTML =
-    '<p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#F2F4F5">Your assets</p>' +
-    '<p style="margin:0 0 12px;font-size:12px;color:#7A8087">Files you have submitted or generated.</p>' +
-    (files.length
-      ? '<div style="display:flex;flex-direction:column;gap:6px">' + files.map((f) =>
-          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;' +
-          'padding:8px 11px;border:1px solid rgba(255,255,255,.07);border-radius:6px;font-size:12.5px">' +
-          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
-          (f.file_name || '').replace(/[<>]/g, '') + '</span>' +
-          '<span style="color:#7A8087;flex:0 0 auto">' +
-          (f.size_bytes ? Math.round(f.size_bytes / 1024) + ' KB' : '') + '</span></div>').join('') + '</div>'
-      : '<p style="margin:0;font-size:12.5px;color:#7A8087">Nothing yet.</p>');
-  left.parentNode.insertBefore(panel, left.nextSibling);
+  // Generated-asset library is now rendered by dr-folders.js
 });

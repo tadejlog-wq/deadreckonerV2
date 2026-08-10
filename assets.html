@@ -3194,7 +3194,7 @@
 <aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
   <header class="topbar" role="banner">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
-      <img src="favicon.png" alt="" aria-hidden="true">
+      <img src="logo-mark-white.png" alt="" aria-hidden="true">
       <span>Deadreckoner</span>
     </a>
     <nav class="topbar-breadcrumb" aria-label="Breadcrumb">
@@ -3243,6 +3243,7 @@
         </section>
       </aside>
 
+      <div id="dr-templates" style="margin-bottom:12px"></div>
       <section class="glass ai-main">
         <div class="ai-chat-header">
           <div>
@@ -3273,22 +3274,12 @@
             </div>
           </div>
 
-          <div class="msg msg-user">
-            <div class="msg-avatar user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="3"/><path d="M6.5 19c.8-3.2 2.6-4.8 5.5-4.8s4.7 1.6 5.5 4.8"/></svg></div>
-            <div><div class="msg-bubble">I need to create a pitch deck for a client</div><span class="msg-time">2 min ago</span></div>
-          </div>
-
           <div class="msg msg-ai">
             <div class="msg-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
             <div>
               <div class="msg-bubble">Great. A few quick questions:<br><br><strong>1. Client name?</strong><br><strong>2. Industry / sector?</strong><br><strong>3. Purpose</strong> &#8212; investor pitch, sales, or partnership?<br><strong>4. Length</strong> &#8212; short (8&#8211;12 slides) or full (20&#8211;30)?<br><br>Answer all four and I&#39;ll generate the structure with your brand applied.</div>
-              <span class="msg-time">2 min ago</span>
+              
             </div>
-          </div>
-
-          <div class="msg msg-user">
-            <div class="msg-avatar user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="3"/><path d="M6.5 19c.8-3.2 2.6-4.8 5.5-4.8s4.7 1.6 5.5 4.8"/></svg></div>
-            <div><div class="msg-bubble">Acme Corp, tech / SaaS, investor pitch, 10 slides</div><span class="msg-time">1 min ago</span></div>
           </div>
 
           <div class="msg msg-ai">
@@ -3418,6 +3409,8 @@
 <script defer src="app-data.js"></script>
 <script defer src="app-actions.js"></script>
 <script defer src="assets-ux.js"></script>
+<script defer src="dr-templates.js"></script>
+<script defer src="dr-wire.js"></script>
 <script defer src="modal-guard.js"></script>
 <script defer>
   document.addEventListener('DOMContentLoaded', () => {

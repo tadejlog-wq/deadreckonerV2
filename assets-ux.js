@@ -9,9 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.slot-group').forEach((group) => {
     const head = group.querySelector('.slot-group-head');
     if (!head) return;
+    // Collapsed by default: 53 open cards buried everything below them.
+    group.classList.add('collapsed');
     head.setAttribute('role', 'button');
     head.setAttribute('tabindex', '0');
-    head.setAttribute('aria-expanded', 'true');
+    head.setAttribute('aria-expanded', 'false');
     const toggle = () => {
       const collapsed = group.classList.toggle('collapsed');
       head.setAttribute('aria-expanded', String(!collapsed));
@@ -59,7 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'margin-left:8px;padding:6px 12px;border:1px solid rgba(255,255,255,.12);' +
     'border-radius:999px;background:transparent;color:var(--text-secondary,#8B9196);' +
     'font-size:12px;cursor:pointer;flex:0 0 auto';
-  let collapsed = false;
+  let collapsed = true;
+  bulk.textContent = 'Expand all';
   bulk.addEventListener('click', () => {
     collapsed = !collapsed;
     document.querySelectorAll('.slot-group').forEach((g) => {

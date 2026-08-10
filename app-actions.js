@@ -201,18 +201,59 @@
         '<div style="border-top:1px solid rgba(255,255,255,.08);padding-top:14px">' +
         '<p style="margin:0;font-size:13px;color:#c7c7cc;line-height:1.6">' +
         esc(r.description || 'No additional details provided.') + '</p></div>' +
-        '<p style="margin:16px 0 0;font-size:12px;color:#8B9196">' +
-        (r.file_count || 0) + ' attached file' + ((r.file_count || 0) === 1 ? '' : 's') + '</p>' +
+        '<div id="drReqFiles" style="margin:16px 0 0"><p style="margin:0;font-size:12px;color:#8B9196">' +
+        ((r.file_count || 0) === 0 ? 'No attached files.' : 'Loading attachments…') + '</p></div>' +
         '<p id="drReqMsg" style="margin:12px 0 0;font-size:12px;color:#8B9196"></p></div>' +
         '<div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 22px;' +
         'border-top:1px solid rgba(255,255,255,0.09)">' +
         '<button data-app-control data-close style="' + BTN + '">Close</button>' +
         (canAct && r.status !== 'resolved'
-          ? '<button data-app-control data-act="assigned" style="' + BTN + '">Assign to me</button>' +
+          ? (r.status !== 'assigned'
+              ? '<button data-app-control data-act="assigned" style="' + BTN + '">Assign to me</button>'
+              : '') +
             '<button data-app-control data-act="resolved" style="' + BTN_P + '">Mark resolved</button>'
           : '') +
         '</div>';
       wireClose(rBack);
+
+      // Fetch attachment metadata and expose signed download links.
+      if ((r.file_count || 0) > 0 && client) {
+        (async () => {
+          const holder = rBack.querySelector('#drReqFiles');
+          try {
+            const { data: atts } = await client.from('request_attachments')
+              .select('file_name,storage_path,size_bytes').eq('request_id', r.id);
+            if (!atts || !atts.length) {
+              holder.innerHTML = '<p style="margin:0;font-size:12px;color:#8B9196">No attached files.</p>';
+              return;
+            }
+            holder.innerHTML =
+              '<p style="margin:0 0 8px;font-size:12px;color:#8B9196">Attachments</p>' +
+              '<div style="display:flex;flex-direction:column;gap:6px">' +
+              atts.map((a, i) =>
+                '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;' +
+                'padding:8px 11px;border:1px solid rgba(255,255,255,.08);border-radius:6px;font-size:12.5px">' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.file_name) + '</span>' +
+                '<button data-app-control data-dl="' + i + '" style="border:1px solid rgba(20,176,160,.4);' +
+                'background:rgba(20,176,160,.08);color:#14B0A0;border-radius:5px;padding:4px 10px;' +
+                'font-size:11.5px;cursor:pointer;flex:0 0 auto">Download</button></div>').join('') + '</div>';
+            holder.addEventListener('click', async (ev) => {
+              const b = ev.target.closest('[data-dl]');
+              if (!b) return;
+              const a = atts[Number(b.dataset.dl)];
+              b.disabled = true; b.textContent = '...';
+              const { data: signed, error } = await client.storage
+                .from('request-attachments').createSignedUrl(a.storage_path, 60);
+              b.disabled = false; b.textContent = 'Download';
+              if (error || !signed) { b.textContent = 'Unavailable'; return; }
+              window.open(signed.signedUrl, '_blank');
+            });
+          } catch (e) {
+            holder.innerHTML = '<p style="margin:0;font-size:12px;color:#8B9196">Could not load attachments.</p>';
+          }
+        })();
+      }
+
       rBack.querySelectorAll('[data-act]').forEach((b) => {
         b.addEventListener('click', async () => {
           const msg = rBack.querySelector('#drReqMsg');
@@ -234,6 +275,99 @@
       if (e.key !== 'Enter') return;
       const card = e.target.closest && e.target.closest('.request-card[data-request-id]');
       if (card) openRequest(card.dataset.requestId);
+    });
+
+    // ── 6. Screening submissions: review + download ─────────
+    const sBack = makeModal('dr-submission');
+    async function openSubmission(id) {
+      const all = window.__drSubmissions || [];
+      const s = all.find((x) => x.id === id);
+      if (!s || !client) return;
+      const role = db && db.getCurrentUserRole ? (await db.getCurrentUserRole()).role : null;
+      const isAdmin = role === 'admin';
+      sBack.firstElementChild.innerHTML =
+        HEAD('Asset submission') +
+        '<div style="padding:22px">' +
+        '<p style="margin:0 0 4px;font-size:15px;font-weight:500">' + esc(s.slot_name || 'Untitled') + '</p>' +
+        '<p style="margin:0 0 16px;font-size:12px;color:#8B9196">' +
+        esc(s.category || 'Uncategorised') + ' &middot; ' + esc(s.status) + '</p>' +
+        '<div id="drSubFiles"><p style="margin:0;font-size:12px;color:#8B9196">Loading files…</p></div>' +
+        '<p id="drSubMsg" style="margin:12px 0 0;font-size:12px;color:#8B9196"></p></div>' +
+        '<div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 22px;' +
+        'border-top:1px solid rgba(255,255,255,0.09)">' +
+        '<button data-app-control data-close style="' + BTN + '">Close</button>' +
+        (isAdmin && s.status === 'pending'
+          ? '<button data-app-control data-sub="rejected" style="' + BTN + '">Reject</button>' +
+            '<button data-app-control data-sub="approved" style="' + BTN_P + '">Approve</button>'
+          : '') + '</div>';
+      wireClose(sBack);
+
+      (async () => {
+        const holder = sBack.querySelector('#drSubFiles');
+        try {
+          const { data: files } = await client.from('asset_submission_files')
+            .select('file_name,storage_path,size_bytes').eq('submission_id', s.id);
+          if (!files || !files.length) {
+            holder.innerHTML = '<p style="margin:0;font-size:12px;color:#8B9196">No files attached.</p>';
+            return;
+          }
+          holder.innerHTML =
+            '<p style="margin:0 0 8px;font-size:12px;color:#8B9196">Files</p>' +
+            '<div style="display:flex;flex-direction:column;gap:6px">' +
+            files.map((f, i) =>
+              '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;' +
+              'padding:8px 11px;border:1px solid rgba(255,255,255,.08);border-radius:6px;font-size:12.5px">' +
+              '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(f.file_name) + '</span>' +
+              '<button data-app-control data-dl="' + i + '" style="border:1px solid rgba(20,176,160,.4);' +
+              'background:rgba(20,176,160,.08);color:#14B0A0;border-radius:5px;padding:4px 10px;' +
+              'font-size:11.5px;cursor:pointer;flex:0 0 auto">Download</button></div>').join('') + '</div>';
+          holder.addEventListener('click', async (ev) => {
+            const b = ev.target.closest('[data-dl]');
+            if (!b) return;
+            const f = files[Number(b.dataset.dl)];
+            b.disabled = true; b.textContent = '...';
+            const { data: signed, error } = await client.storage
+              .from('asset-submissions').createSignedUrl(f.storage_path, 60);
+            b.disabled = false; b.textContent = 'Download';
+            if (error || !signed) { b.textContent = 'Unavailable'; return; }
+            window.open(signed.signedUrl, '_blank');
+          });
+        } catch (e) {
+          holder.innerHTML = '<p style="margin:0;font-size:12px;color:#8B9196">Could not load files.</p>';
+        }
+      })();
+
+      sBack.querySelectorAll('[data-sub]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          const msg = sBack.querySelector('#drSubMsg');
+          b.disabled = true; msg.textContent = 'Saving…';
+          const { error } = await client.from('asset_submissions')
+            .update({ status: b.dataset.sub }).eq('id', s.id);
+          if (error) { msg.textContent = error.message; b.disabled = false; return; }
+          if (db.logEvent) db.logEvent('asset_submission.' + b.dataset.sub,
+            { entityType: 'asset_submission', entityId: s.id });
+          msg.textContent = 'Updated.';
+          setTimeout(() => { close(sBack); window.location.reload(); }, 700);
+        });
+      });
+      open(sBack);
+    }
+
+    document.addEventListener('click', async (e) => {
+      const approve = e.target.closest('[data-sub-approve]');
+      const reject  = e.target.closest('[data-sub-reject]');
+      if (approve || reject) {
+        e.stopPropagation();
+        const btn = approve || reject;
+        const id = btn.dataset.subApprove || btn.dataset.subReject;
+        btn.disabled = true;
+        const { error } = await client.from('asset_submissions')
+          .update({ status: approve ? 'approved' : 'rejected' }).eq('id', id);
+        if (!error) window.location.reload(); else btn.disabled = false;
+        return;
+      }
+      const row = e.target.closest('.submission-row[data-submission-id]');
+      if (row) openSubmission(row.dataset.submissionId);
     });
   });
 })();

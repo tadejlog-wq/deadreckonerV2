@@ -9,7 +9,6 @@ Disallow: /dashboard.html
 Disallow: /brand.html
 Disallow: /approvals.html
 Disallow: /assets.html
-Disallow: /governance.html
 Disallow: /profile-settings.html
 Disallow: /credit-ledger.html
 Disallow: /brand-guidelines.html
