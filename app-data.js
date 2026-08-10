@@ -62,7 +62,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── 2. Maturity / slot totals ─────────────────────────────
   const filled = c.approved;
   const pct = Math.round((filled / TOTAL_SLOTS) * 100);
-  document.querySelectorAll('.segment-value').forEach((el) => {
+  document.querySelectorAll('.segment-value, .summary-value').forEach((el) => {
+    const label = el.previousElementSibling;
+    const name = label ? (label.textContent || '').trim().toLowerCase() : '';
+    if (name === 'filled') { el.textContent = pad(filled); return; }
+    if (name === 'slots')  { el.textContent = String(TOTAL_SLOTS); return; }
     const t = (el.textContent || '').trim();
     if (t === '06') el.textContent = pad(filled);
     else if (t === '53') el.textContent = String(TOTAL_SLOTS);
@@ -83,11 +87,79 @@ document.addEventListener('DOMContentLoaded', async () => {
       `color:var(--text-muted,#7A8087);font-size:13px;">Nothing here yet. ` +
       `Assets you upload will appear once submitted.</td></tr>`;
   });
-  document.querySelectorAll('.requests-grid, .kanban-cards').forEach((grid) => {
-    grid.innerHTML =
-      `<p style="padding:28px 4px;color:var(--text-muted,#7A8087);font-size:13px;">` +
-      `No requests yet.</p>`;
+  // Render real requests into their matching tab panels. Counting them but
+  // showing "none" was the bug: the tab said 01 while the panel said empty.
+  let liveRequests = [];
+  if (wsId) {
+    try {
+      const { data } = await client.from('requests')
+        .select('*').eq('workspace_id', wsId).order('updated_at', { ascending: false });
+      liveRequests = data || [];
+    } catch (e) { /* leave empty */ }
+  }
+
+  const TYPE_LABEL = { 'new-asset': 'New Asset', exception: 'Exception', adaptation: 'Adaptation' };
+  const esc = (s) => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+  const ago = (iso) => {
+    if (!iso) return '';
+    const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return m + ' min ago';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
+    const d2 = Math.floor(h / 24);
+    return d2 + (d2 === 1 ? ' day ago' : ' days ago');
+  };
+
+  function requestCard(r) {
+    const el = document.createElement('article');
+    el.className = 'glass glass-nav request-card';
+    el.dataset.requestId = r.id;
+    el.dataset.requestStatus = r.status;
+    el.style.cursor = 'pointer';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.innerHTML =
+      `<div class="req-header"><span class="req-title">${esc(r.title)}</span>` +
+      `<span class="req-type-chip ${esc(r.type)}">${esc(TYPE_LABEL[r.type] || r.type)}</span></div>` +
+      `<p class="req-desc">${esc(r.description || 'No additional details provided.')}</p>` +
+      `<div class="req-meta">` +
+      `<span class="req-meta-item">${esc(ago(r.created_at))}</span>` +
+      `<span class="req-meta-item">${r.file_count || 0} file${(r.file_count || 0) === 1 ? '' : 's'}</span>` +
+      `<span class="req-status-chip ${esc(r.status)}">${esc(r.status)}</span></div>`;
+    return el;
+  }
+
+  const PANEL_STATUS = { list: 'open', open: 'open', assigned: 'assigned', resolved: 'resolved' };
+  document.querySelectorAll('.requests-grid').forEach((grid) => {
+    const key = grid.dataset.viewPanel || (grid.closest('[id^="panel-"]') || {}).id || '';
+    const want = PANEL_STATUS[key.replace('panel-', '')] || 'open';
+    const mine = liveRequests.filter((r) => r.status === want);
+    grid.innerHTML = '';
+    if (!mine.length) {
+      grid.innerHTML =
+        `<p style="padding:28px 4px;color:var(--text-muted,#7A8087);font-size:13px;">No ${want} requests yet.</p>`;
+      return;
+    }
+    mine.forEach((r) => grid.appendChild(requestCard(r)));
   });
+
+  document.querySelectorAll('.kanban-cards').forEach((col) => {
+    const want = col.dataset.status || 'open';
+    const mine = liveRequests.filter((r) => r.status === want);
+    col.querySelectorAll('.kanban-card').forEach((k) => k.remove());
+    mine.forEach((r) => {
+      const k = document.createElement('div');
+      k.className = 'kanban-card';
+      k.dataset.requestId = r.id;
+      k.draggable = true;
+      k.innerHTML = `<div class="kanban-card-title">${esc(r.title)}</div>` +
+                    `<div class="kanban-card-meta">${esc(r.priority)} · ${esc(ago(r.created_at))}</div>`;
+      col.insertBefore(k, col.querySelector('.kanban-add') || null);
+    });
+  });
+
+  window.__drRequests = liveRequests;
 
   // ── 4. Reset slot cards to their true state ───────────────
   document.querySelectorAll('.slot-card').forEach((card) => {
@@ -122,8 +194,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('button:not([data-wired])').forEach((btn) => {
     if (btn.closest('[data-shell], .rf-shell, .slot-shell, .ob-shell, .aem-shell')) return;
     if (btn.id || btn.hasAttribute('aria-label') || btn.dataset.tab || btn.dataset.filter) return;
+    if (btn.hasAttribute('data-app-control')) return;
     const label = (btn.textContent || '').trim().toLowerCase();
-    const wired = ['sign out','submit','cancel','close','upload','new request','approve','reject','filter','add request'];
+    const wired = ['sign out','submit','cancel','close','upload','new request','approve','reject','filter','add request','collapse all','expand all','ask the brand ai','download','erase','view plans'];
     if (wired.some((w) => label.includes(w))) return;
     btn.setAttribute('disabled', '');
     btn.style.opacity = '0.35';
@@ -154,10 +227,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (child.classList && child.classList.contains('section-head')) return;
         child.remove();
       });
+      // A labelled, structured placeholder reads as "not filled yet",
+      // where bare grey text reads as "broken".
+      const SLOTS = {
+        'sec-colour':    ['Primary palette', 'Semantic colours', 'Secondary palette', 'Extended palette'],
+        'sec-type':      ['Heading typeface', 'Body typeface', 'Type scale', 'Fallback stack'],
+        'sec-logo':      ['Primary logo', 'Reversed logo', 'Clear space', 'Misuse examples'],
+        'sec-spacing':   ['Spacing scale', 'Component radii', 'Container radii'],
+        'sec-components':['Buttons', 'Status indicators', 'Chips', 'Cards'],
+        'sec-voice':     ['Voice principles', 'Tone by context', 'Grammar rules', 'Terminology']
+      };
       const msg = document.createElement('p');
-      msg.style.cssText = 'padding:28px 4px;color:var(--text-muted,#7A8087);font-size:13px;max-width:560px;';
+      msg.style.cssText = 'padding:4px 4px 16px;color:var(--text-muted,#7A8087);font-size:13px;max-width:560px;';
       msg.textContent = EMPTY_COPY[id] || 'Nothing approved for this section yet.';
       sec.appendChild(msg);
+
+      const ghosts = document.createElement('div');
+      ghosts.style.cssText =
+        'display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:0 4px 6px;';
+      (SLOTS[id] || ['Awaiting approved assets']).forEach((label) => {
+        const g = document.createElement('div');
+        g.style.cssText =
+          'padding:14px 12px;border:1px dashed rgba(255,255,255,0.10);border-radius:6px;' +
+          'background:rgba(255,255,255,0.012);';
+        g.innerHTML =
+          '<div style="font-size:12px;color:var(--text-secondary,#8B9196);line-height:1.3">' +
+          label.replace(/[<>]/g, '') + '</div>' +
+          '<div style="margin-top:5px;font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;' +
+          'letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted,#7A8087)">Awaiting data</div>';
+        ghosts.appendChild(g);
+      });
+      sec.appendChild(ghosts);
     });
   }
 
@@ -257,6 +357,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── 10. Brand identity radar reflects real category progress ──
   const radar = document.querySelector('.radar-svg, .radar-body svg');
   if (radar && c.approved === 0) {
+    // Nothing approved yet — show an honest empty state instead of a shape.
+    const holder = radar.closest('.radar-body') || radar.parentElement;
+    radar.remove();
+    if (holder && !holder.querySelector('[data-empty]')) {
+      const p = document.createElement('p');
+      p.setAttribute('data-empty', '');
+      p.style.cssText = 'padding:34px 12px;text-align:center;color:var(--text-muted,#7A8087);font-size:12.5px;line-height:1.5;';
+      p.textContent = 'Your brand identity map appears here once assets are approved.';
+      holder.appendChild(p);
+    }
+  }
+  if (false) {
     radar.querySelectorAll('polygon[fill], polyline, path[fill]').forEach((shape) => {
       const f = shape.getAttribute('fill');
       if (f && f !== 'none') { shape.setAttribute('fill', 'none'); }

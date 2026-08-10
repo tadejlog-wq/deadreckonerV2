@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const jump = document.createElement('button');
   jump.type = 'button';
+  jump.setAttribute('data-app-control', '');
   jump.textContent = 'Ask the Brand AI ↓';
   jump.style.cssText =
     'margin-left:auto;padding:6px 12px;border:1px solid rgba(20,176,160,.35);' +
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Collapse-all / expand-all ─────────────────────────────
   const bulk = document.createElement('button');
   bulk.type = 'button';
+  bulk.setAttribute('data-app-control', '');
   bulk.textContent = 'Collapse all';
   bulk.style.cssText =
     'margin-left:8px;padding:6px 12px;border:1px solid rgba(255,255,255,.12);' +

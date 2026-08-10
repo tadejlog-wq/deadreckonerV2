@@ -280,12 +280,18 @@ async function dbApplyRoleGating() {
 
 // ── WORKSPACE CREATION (first-time onboarding) ────────────
 
-async function dbCreateWorkspace(companyName, companyUrl) {
+async function dbCreateWorkspace(companyName, companyUrl, profile) {
   const client = getClient();
   if (!client) return { error: 'Supabase client not configured.' };
 
   const { data, error } = await client.functions.invoke('create-workspace', {
-    body: { company_name: companyName, company_url: companyUrl }
+    body: {
+      company_name: companyName,
+      company_url: companyUrl,
+      industry: (profile && profile.industry) || null,
+      company_size: (profile && profile.company_size) || null,
+      owner_role: (profile && profile.owner_role) || null
+    }
   });
 
   if (error) {
@@ -375,9 +381,50 @@ async function dbReviewScrapeCandidate(candidateId, decision) {
   return { error: error?.message };
 }
 
+
+// ── GDPR: EXPORT, ERASURE, FEEDBACK ───────────────────────
+
+async function dbExportMyData() {
+  const client = getClient();
+  if (!client) return { error: 'Supabase client not configured.' };
+  const { data, error } = await client.rpc('export_my_data');
+  if (error) return { error: error.message };
+  dbLogEvent('gdpr.data_exported');
+  return { data };
+}
+
+async function dbEraseMyData() {
+  const client = getClient();
+  if (!client) return { error: 'Supabase client not configured.' };
+  const { data, error } = await client.rpc('erase_my_data');
+  if (error) return { error: error.message };
+  return { data };
+}
+
+async function dbSubmitFeedback({ kind, score, comment, context }) {
+  const client = getClient();
+  if (!client) return { error: 'Supabase client not configured.' };
+  const { data: userData } = await client.auth.getUser();
+  if (!userData || !userData.user) return { error: 'Not signed in.' };
+  const wsId = userData.user.app_metadata && userData.user.app_metadata.workspace_id;
+  const { error } = await client.from('feedback').insert({
+    workspace_id: wsId || null,
+    user_id: userData.user.id,
+    kind, score,
+    comment: comment || null,
+    context: context || null
+  });
+  if (error) return { error: error.message };
+  dbLogEvent('feedback.submitted', { metadata: { kind, score } });
+  return { data: true };
+}
+
 // Expose on window so existing inline scripts can call these without a bundler.
 window.deadreckonerDB = {
   getClient,
+  exportMyData: dbExportMyData,
+  eraseMyData: dbEraseMyData,
+  submitFeedback: dbSubmitFeedback,
   waitForSession,
   submitRequest: dbSubmitRequest,
   loadRequests: dbLoadRequests,
