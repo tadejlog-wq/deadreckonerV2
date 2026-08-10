@@ -258,7 +258,7 @@ async function dbGetCurrentUserRole() {
     .select('role')
     .eq('workspace_id', workspaceId)
     .eq('user_id', userData.user.id)
-    .single();
+    .maybeSingle();
 
   if (error) return { role: null, error: error.message };
   return { role: data?.role || null };

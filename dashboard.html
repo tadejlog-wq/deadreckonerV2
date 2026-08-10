@@ -3685,7 +3685,17 @@
     // otherwise getUser() returns null on a freshly signed-in user.
     const session = await window.deadreckonerDB.waitForSession();
     if (!session || !session.user) return;
-    if (session.user.app_metadata && session.user.app_metadata.workspace_id) return;
+
+    // The token can still carry a workspace_id after the row is gone
+    // (deleted, or membership revoked). Trust the database, not the claim.
+    const wsId = session.user.app_metadata && session.user.app_metadata.workspace_id;
+    if (wsId) {
+      try {
+        const client = window.deadreckonerDB.getClient();
+        const { data } = await client.from('workspaces').select('id').eq('id', wsId).maybeSingle();
+        if (data) return; // real workspace exists — no onboarding needed
+      } catch (e) { /* fall through and onboard */ }
+    }
     backdrop.classList.add('open');
   }
 

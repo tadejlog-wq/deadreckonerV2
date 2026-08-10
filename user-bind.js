@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const wsId = user.app_metadata && user.app_metadata.workspace_id;
   if (wsId && client) {
     try {
-      const { data } = await client.from('workspaces').select('name, maturity_tier').eq('id', wsId).single();
+      const { data } = await client.from('workspaces').select('name, maturity_tier').eq('id', wsId).maybeSingle();
       if (data && data.name) wsName = data.name;
     } catch (e) { /* leave as-is */ }
   }
