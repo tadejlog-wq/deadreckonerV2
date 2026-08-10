@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self';">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
 <style>
     @font-face {
       font-family: "IBM Plex Sans Fallback";
@@ -3163,9 +3163,12 @@
     @media (max-width: 700px) {
       .slot-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     }
+  
+    .skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:#14B0A0;color:#07110f;font-weight:600;font-size:14px;border-radius:0 0 6px 0;text-decoration:none}.skip-link:focus{left:0}
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
 
 <aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
   <header class="topbar" role="banner">
@@ -3191,7 +3194,7 @@
     </div>
   </header>
 
-  <main class="app-main">
+  <main id="main-content" class="app-main">
     <section class="glass" style="margin-bottom:16px;">
       <header class="panel-header">
         <div class="panel-heading"><svg class="panel-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4zM4 7l8-4 8 4"/></svg><span class="panel-title">Brand Asset Taxonomy</span></div>

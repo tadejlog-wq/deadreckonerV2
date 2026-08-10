@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self';">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js"></script>
 <style>
     @font-face {
       font-family: "IBM Plex Sans Fallback";
@@ -3148,9 +3148,12 @@
     .scrape-action-btn.accept:hover { background: rgba(20,176,160,.1); }
     .scrape-action-btn.reject:hover { background: rgba(184,122,106,.1); color: var(--clay); border-color: rgba(184,122,106,.4); }
     .scrape-card.processed { opacity: .35; pointer-events: none; }
+  
+    .skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:#14B0A0;color:#07110f;font-weight:600;font-size:14px;border-radius:0 0 6px 0;text-decoration:none}.skip-link:focus{left:0}
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
 
 <aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
 <header class="topbar">
@@ -3186,7 +3189,7 @@
     </button>
   </header>
 
-  <main class="app-main">
+  <main id="main-content" class="app-main">
     <div class="dashboard brand-page">
 
       <!-- HERO -->

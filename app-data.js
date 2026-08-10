@@ -126,4 +126,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.style.cursor = 'not-allowed';
     btn.title = 'Not available yet';
   });
+
+  // ── 7. Brand book: never present Deadreckoner's own identity as the
+  //      customer's. Until they have approved brand assets, show an
+  //      honest empty state instead of a populated demo brand book.
+  const brandSections = ['sec-colour','sec-type','sec-logo','sec-spacing','sec-components','sec-voice'];
+  const hasBrandData = c.approved > 0;
+  if (document.getElementById('sec-hero') && !hasBrandData) {
+    const EMPTY_COPY = {
+      'sec-colour':    'Approve colour assets and your palette will be documented here automatically.',
+      'sec-type':      'Approve typeface assets and your type system will appear here.',
+      'sec-logo':      'Approve your logo assets to generate usage rules and clear-space guidance.',
+      'sec-spacing':   'Your spacing scale will be documented here once your foundations are approved.',
+      'sec-components':'Component standards are generated from your approved assets.',
+      'sec-voice':     'Approve voice and tone assets to publish your writing standards here.'
+    };
+    brandSections.forEach((id) => {
+      const sec = document.getElementById(id);
+      if (!sec) return;
+      // Keep the section heading; clear only the demo body beneath it.
+      Array.from(sec.children).forEach((child) => {
+        if (child.querySelector && child.querySelector('.section-title')) return;
+        if (child.classList && child.classList.contains('section-head')) return;
+        child.remove();
+      });
+      const msg = document.createElement('p');
+      msg.style.cssText = 'padding:28px 4px;color:var(--text-muted,#7A8087);font-size:13px;max-width:560px;';
+      msg.textContent = EMPTY_COPY[id] || 'Nothing approved for this section yet.';
+      sec.appendChild(msg);
+    });
+  }
 });
