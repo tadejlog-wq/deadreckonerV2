@@ -100,6 +100,9 @@ Deno.serve(async (req) => {
       // Safe reasons can be shown; anything else stays generic so the
       // endpoint is not usable as an internal-network probe.
       const safe = ['invalid url','protocol not allowed','not html','too many redirects'];
+      if (/timed out|TimeoutError|aborted/i.test(reason)) {
+        return jsonResponse({ error: 'That site took too long to respond. Try again, or add assets manually.' }, 400);
+      }
       const msg = safe.includes(reason)
         ? `Could not read that website (${reason}). Use a full https:// address.`
         : 'Could not read that website. Check the address and try again.';
@@ -183,7 +186,7 @@ function jsonResponse(body: unknown, status = 200) {
 // ── SSRF HARDENING ────────────────────────────────────────
 const MAX_BYTES = 2_000_000;
 const MAX_REDIRECTS = 2;
-const FETCH_TIMEOUT_MS = 5000;
+const FETCH_TIMEOUT_MS = 20000;
 
 function isBlockedIp(ip: string): boolean {
   if (ip.includes(':')) {
