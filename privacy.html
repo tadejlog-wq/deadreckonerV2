@@ -64,73 +64,90 @@
       <div class="doc-header">
         <p class="eyebrow">Legal</p>
         <h1>Privacy Policy</h1>
-        <p class="updated">Draft — pending legal review</p>
+        <p class="updated">Last updated: 10 August 2026</p>
       </div>
 
-      <div class="notice"><strong>Draft placeholder.</strong> This text is a structural draft for internal review, not reviewed or approved legal copy. Have this reviewed by qualified counsel before publishing it to real users.</div>
-
       <section>
-        <h2>1. Overview</h2>
-        <p>This policy explains what data Deadreckoner collects, why, and how it's handled. The short version: your brand assets stay in your own Google Drive, we never copy them to our own servers, and we only process the minimum account and metadata information needed to run the Service.</p>
+        <h2>1. Who we are</h2>
+        <p>Deadreckoner ("we", "us") provides brand governance software. We are the data controller for the personal data described in this policy. For any privacy question or request, contact us at <a href="mailto:privacy@deadreckoner.dev">privacy@deadreckoner.dev</a>.</p>
       </section>
 
       <section>
-        <h2>2. What we collect</h2>
+        <h2>2. Our core principle: we do not hold your files</h2>
+        <p>Your brand assets remain in your own Google Drive at all times. Deadreckoner reads file metadata and, where you explicitly submit an asset for review, a copy of that specific file. We do not bulk-copy, mirror, or retain your Drive contents on our servers. Revoking our Drive access in your Google account settings ends our access immediately.</p>
+      </section>
+
+      <section>
+        <h2>3. What we collect and why</h2>
         <table>
-          <thead><tr><th>Data</th><th>Why</th></tr></thead>
+          <thead><tr><th>Data</th><th>Purpose</th><th>Lawful basis</th></tr></thead>
           <tbody>
-            <tr><td>Google account email &amp; name</td><td>Authentication and account identification</td></tr>
-            <tr><td>Google Drive file metadata (names, MIME types, checksums)</td><td>Asset classification and quality gating</td></tr>
-            <tr><td>Approval decisions and workspace activity</td><td>Brand maturity tracking, audit history</td></tr>
-            <tr><td>Basic usage/performance logs</td><td>Reliability and debugging</td></tr>
+            <tr><td>Name, email, profile picture (from Google sign-in)</td><td>Authentication, account identity</td><td>Contract</td></tr>
+            <tr><td>Google Drive file metadata (names, types, sizes, thumbnails)</td><td>Asset classification and quality gating</td><td>Contract</td></tr>
+            <tr><td>Files you explicitly submit for review</td><td>Approval workflow and versioned brand library</td><td>Contract</td></tr>
+            <tr><td>Workspace name and website address</td><td>Workspace setup and optional brand discovery</td><td>Contract</td></tr>
+            <tr><td>Activity log (action type, timestamp, user and workspace identifiers)</td><td>Audit trail, security, product improvement</td><td>Legitimate interests</td></tr>
+            <tr><td>Email address submitted to our marketing list</td><td>Product announcements you asked for</td><td>Consent</td></tr>
           </tbody>
         </table>
-        <p>We do not collect the contents of your files themselves for storage — only the metadata needed to classify and track them. Files are read from your Drive at the point of classification, not duplicated into our systems.</p>
+        <p>We do not use advertising cookies, cross-site trackers, or profiling. We do not sell personal data.</p>
       </section>
 
       <section>
-        <h2>3. Google Drive access</h2>
-        <p>Deadreckoner requests Google Drive API access scoped to the folders it manages. This access is used solely to scan, classify, and organize the assets you place there. We do not access files outside the folders the Service is configured to manage, and we do not sell or share the contents of your Drive with third parties.</p>
+        <h2>4. Where your data is held</h2>
+        <p>Our database and file storage are hosted in the European Union (Frankfurt, eu-central-1). Some processors named below operate outside the EEA; where that is the case, transfers are made under the European Commission's Standard Contractual Clauses.</p>
       </section>
 
       <section>
-        <h2>4. How we use your data</h2>
+        <h2>5. Processors we rely on</h2>
+        <table>
+          <thead><tr><th>Processor</th><th>Role</th><th>Location</th></tr></thead>
+          <tbody>
+            <tr><td>Supabase</td><td>Database, authentication, file storage</td><td>EU (Frankfurt)</td></tr>
+            <tr><td>Google</td><td>Sign-in and Drive access</td><td>Global</td></tr>
+            <tr><td>Anthropic</td><td>AI classification of asset metadata</td><td>United States</td></tr>
+            <tr><td>GitHub Pages</td><td>Website hosting</td><td>Global</td></tr>
+            <tr><td>jsDelivr</td><td>Script delivery (CDN)</td><td>Global</td></tr>
+          </tbody>
+        </table>
+        <p>Asset filenames and metadata are sent to Anthropic for classification. File contents are not sent for classification.</p>
+      </section>
+
+      <section>
+        <h2>6. How long we keep it</h2>
         <ul>
-          <li>To authenticate you and maintain your account</li>
-          <li>To classify and quality-gate assets via automated AI processing</li>
-          <li>To track and display your brand's maturity progress</li>
-          <li>To generate brand guideline documents from your approved assets</li>
+          <li><strong>Account data</strong> — for as long as your account exists, then deleted within 30 days of closure.</li>
+          <li><strong>Submitted assets and approvals</strong> — until you delete them or close your workspace.</li>
+          <li><strong>Activity logs</strong> — 24 months, then deleted.</li>
+          <li><strong>Marketing list</strong> — until you unsubscribe.</li>
         </ul>
       </section>
 
       <section>
-        <h2>5. Third-party processors</h2>
-        <p>We use a small number of infrastructure providers to run the Service: a database provider for account and workspace data, an AI provider for asset classification, and Google's own APIs for Drive access. Each processes only the data necessary for its specific function.</p>
-      </section>
-
-      <section>
-        <h2>6. Data retention</h2>
-        <p>Account and workspace metadata is retained for as long as your account is active. If you delete your workspace, associated metadata is removed from our systems — your actual files, since they live in your own Drive, are unaffected either way.</p>
-      </section>
-
-      <section>
         <h2>7. Your rights</h2>
-        <p>You can request access to, correction of, or deletion of the account data we hold at any time. Because your files never leave your Drive, revoking Deadreckoner's Drive access from your Google account settings immediately cuts off our ability to read them.</p>
+        <p>If you are in the EEA or UK, you have the right to access, correct, delete, restrict or object to processing of your personal data, and to data portability. Where processing relies on consent, you may withdraw it at any time.</p>
+        <p>To exercise any of these, email <a href="mailto:privacy@deadreckoner.dev">privacy@deadreckoner.dev</a>. We respond within 30 days. You also have the right to complain to your local data protection authority.</p>
+        <p>If you are a California resident, you have equivalent rights to know, delete, correct, and opt out of sale or sharing. We do not sell or share personal information as those terms are defined by the CCPA.</p>
       </section>
 
       <section>
         <h2>8. Security</h2>
-        <p>We use industry-standard practices to protect account and metadata storage, including encrypted connections and access controls. No system is perfectly secure, and we'll notify affected users promptly in the event of a data incident.</p>
+        <p>Data is encrypted in transit (TLS) and at rest. Access to workspace data is enforced at the database level, so members of one workspace cannot read another's. Administrative credentials are held server-side only and are never exposed to the browser.</p>
       </section>
 
       <section>
-        <h2>9. Changes to this policy</h2>
-        <p>We may update this policy as the Service evolves. Material changes will be communicated before they take effect.</p>
+        <h2>9. Cookies and similar technologies</h2>
+        <p>We use a single essential mechanism: a session token stored in your browser so you stay signed in. It is required for the Service to function and is not used for tracking or advertising. We set no analytics or marketing cookies.</p>
       </section>
 
       <section>
-        <h2>10. Contact</h2>
-        <p>Questions about this policy can be sent through the contact channel listed on the homepage.</p>
+        <h2>10. Children</h2>
+        <p>The Service is intended for business use and is not directed at anyone under 16. We do not knowingly collect data from children.</p>
+      </section>
+
+      <section>
+        <h2>11. Changes</h2>
+        <p>If we make a material change to this policy we will update the date above and, where the change significantly affects you, notify you by email before it takes effect.</p>
       </section>
     </div>
   </main>
