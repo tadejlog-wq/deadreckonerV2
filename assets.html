@@ -3102,21 +3102,21 @@
     }
 
     /* ── BRAND ASSET TAXONOMY GRID ── */
-    .slot-taxonomy { padding: 20px; display: flex; flex-direction: column; gap: 28px; }
-    .slot-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .slot-taxonomy { padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+    .slot-group-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
     .slot-group-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; color: var(--teal); background: rgba(20,176,160,.08); flex: 0 0 auto; }
     .slot-group-icon svg { width: 15px; height: 15px; }
     .slot-group-head h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1 1 auto; }
     .slot-group-count { font-family: "IBM Plex Mono", "IBM Plex Mono Fallback", monospace; font-size: 12px; color: var(--text-muted); }
-    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 7px; }
 
     .slot-card {
       position: relative;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 100px;
-      padding: 14px;
+      min-height: 74px;
+      padding: 9px 10px;
       border-radius: var(--card-radius);
       border: 1px solid rgba(255,255,255,0.09);
       background: rgba(255,255,255,0.03);
@@ -3141,8 +3141,8 @@
     .slot-card-top { display: flex; justify-content: flex-end; gap: 4px; }
     .slot-action-btn {
       display: grid;
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       place-items: center;
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: var(--chip-radius);
@@ -3156,16 +3156,25 @@
     .slot-action-btn.download { color: var(--teal); border-color: rgba(20,176,160,.3); }
     .slot-action-btn.download:hover { background: rgba(20,176,160,.12); border-color: var(--teal); }
     .slot-action-btn.upload:hover { color: var(--teal); border-color: rgba(20,176,160,.3); }
-    .slot-card-name { font-size: 13px; font-weight: 500; color: var(--text-primary); line-height: 1.35; margin-top: 8px; }
+    .slot-card-name { font-size: 11.5px; font-weight: 500; color: var(--text-primary); line-height: 1.25; margin-top: 5px; }
     .slot-card.locked .slot-card-name { color: var(--text-secondary); }
-    .slot-card-status { margin-top: 6px; font-family: "IBM Plex Mono", "IBM Plex Mono Fallback", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--eucalyptus); }
+    .slot-card-status { margin-top: 3px; font-family: "IBM Plex Mono", "IBM Plex Mono Fallback", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--eucalyptus); }
     .slot-card.locked .slot-card-status { color: var(--text-muted); }
 
     @media (max-width: 700px) {
-      .slot-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+      .slot-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
     }
   
     .skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:#14B0A0;color:#07110f;font-weight:600;font-size:14px;border-radius:0 0 6px 0;text-decoration:none}.skip-link:focus{left:0}
+
+    /* Collapsible taxonomy groups — keeps the page scannable. */
+    .slot-group-head { cursor: pointer; user-select: none; }
+    .slot-group-head::after {
+      content: "−"; margin-left: 6px; color: var(--text-muted);
+      font-size: 13px; line-height: 1; flex: 0 0 auto;
+    }
+    .slot-group.collapsed .slot-group-head::after { content: "+"; }
+    .slot-group.collapsed .slot-grid { display: none; }
   </style>
 </head>
 <body>
@@ -3395,6 +3404,7 @@
 <script defer src="auth-guard.js"></script>
 <script defer src="user-bind.js"></script>
 <script defer src="app-data.js"></script>
+<script defer src="assets-ux.js"></script>
 <script defer src="modal-guard.js"></script>
 <script defer>
   document.addEventListener('DOMContentLoaded', () => {

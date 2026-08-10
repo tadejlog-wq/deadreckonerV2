@@ -51,10 +51,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!card) return;
     const metric = card.querySelector('.stat-metric, .metric-value');
     if (metric) metric.textContent = pad(STAT_MAP[key]);
-    card.querySelectorAll('.stat-trend, .stat-delta, .stat-change, .stat-compare').forEach((t) => t.remove());
+    card.querySelectorAll('.delta-line, .stat-trend, .stat-delta, .stat-change, .stat-compare, .sparkline').forEach((t) => t.remove());
     if (card.hasAttribute('aria-label')) card.setAttribute('aria-label', `${STAT_MAP[key]} ${key}`);
   });
 
+
+  // Fake trend deltas and sparklines are meaningless with no history —
+  // remove any not caught alongside a matched stat card.
+  document.querySelectorAll('.delta-line, .sparkline').forEach((el) => el.remove());
   // ── 2. Maturity / slot totals ─────────────────────────────
   const filled = c.approved;
   const pct = Math.round((filled / TOTAL_SLOTS) * 100);
@@ -154,6 +158,112 @@ document.addEventListener('DOMContentLoaded', async () => {
       msg.style.cssText = 'padding:28px 4px;color:var(--text-muted,#7A8087);font-size:13px;max-width:560px;';
       msg.textContent = EMPTY_COPY[id] || 'Nothing approved for this section yet.';
       sec.appendChild(msg);
+    });
+  }
+
+  // ── 8. Plan + trial status banner ─────────────────────────
+  if (wsId) {
+    try {
+      const { data: plan } = await client
+        .from('workspace_plan_status').select('*').eq('workspace_id', wsId).maybeSingle();
+      if (plan) {
+        const seatTxt = plan.seat_limit === null
+          ? `${plan.seats_used} seats`
+          : `${plan.seats_used} of ${plan.seat_limit} seats`;
+        let msg = null;
+        if (plan.trial_active) {
+          const d = plan.trial_days_left;
+          msg = `Trial — ${d} day${d === 1 ? '' : 's'} left · ${seatTxt}`;
+        } else if (plan.plan === 'trial') {
+          msg = `Your trial has ended · ${seatTxt}`;
+        }
+        if (msg) {
+          const bar = document.createElement('div');
+          bar.setAttribute('role', 'status');
+          bar.style.cssText =
+            'position:fixed;left:0;right:0;bottom:0;z-index:45;padding:9px 16px;' +
+            'text-align:center;font-size:12px;letter-spacing:.02em;' +
+            'background:rgba(20,176,160,.10);color:var(--teal,#14B0A0);' +
+            'border-top:1px solid rgba(20,176,160,.28);backdrop-filter:blur(12px);';
+          bar.innerHTML = msg +
+            ' · <a href="index.html#pricing" style="color:inherit;text-decoration:underline;">View plans</a>';
+          document.body.appendChild(bar);
+        }
+      }
+    } catch (e) { /* plan table not migrated yet — skip silently */ }
+  }
+
+  // ── 9. Widget-specific clears (real class names, verified in markup) ──
+
+  // Approvals page stat cards use their own class family.
+  const APPROVAL_MAP = {
+    'pending screening': c.pending, 'approved today': c.approved,
+    'rejected': c.rejected, 'open requests': c.open, 'resolved (30d)': c.resolved
+  };
+  document.querySelectorAll('.approval-stat-label').forEach((label) => {
+    const key = (label.textContent || '').trim().toLowerCase();
+    const card = label.parentElement;
+    if (!card) return;
+    const val = card.querySelector('.approval-stat-value');
+    if (val && key in APPROVAL_MAP) val.textContent = pad(APPROVAL_MAP[key]);
+    card.querySelectorAll('.approval-stat-delta').forEach((d) => d.remove());
+  });
+
+  // Tab counters.
+  const TAB_MAP = { screening: c.pending, 'open requests': c.open, assigned: c.assigned, resolved: c.resolved };
+  document.querySelectorAll('.tab-count').forEach((el) => {
+    const tab = el.closest('[data-tab], button, a');
+    const label = tab ? (tab.textContent || '').replace(el.textContent || '', '').trim().toLowerCase() : '';
+    for (const k in TAB_MAP) {
+      if (label.startsWith(k)) { el.textContent = pad(TAB_MAP[k]); break; }
+    }
+  });
+
+  // Dashboard brand-book widget: Deadreckoner's own palette and type were
+  // being shown as the customer's. Clear until they have real approved assets.
+  if (c.approved === 0) {
+    document.querySelectorAll('.bb-palette-swatch').forEach((el) => {
+      el.style.background = 'rgba(255,255,255,0.05)';
+    });
+    document.querySelectorAll('.bb-type-row').forEach((el) => el.remove());
+  }
+  document.querySelectorAll('.bb-count-val').forEach((el) => { el.textContent = '00 / 00'; });
+  document.querySelectorAll('.dual-bar-pct-val, .dual-bar-pct-count').forEach((el) => { el.textContent = '0'; });
+  document.querySelectorAll('.dual-bar-fill').forEach((el) => { el.style.width = '0%'; });
+
+  // Governance + depository + personal asset rows are seeded demo files.
+  ['.governance-row', '.depository-row', '.asset-row'].forEach((sel) => {
+    const rows = document.querySelectorAll(sel);
+    if (!rows.length) return;
+    const parent = rows[0].parentElement;
+    rows.forEach((r) => r.remove());
+    if (parent && !parent.querySelector('[data-empty]')) {
+      const p = document.createElement('p');
+      p.setAttribute('data-empty', '');
+      p.style.cssText = 'padding:22px 4px;color:var(--text-muted,#7A8087);font-size:13px;';
+      p.textContent = 'Nothing yet.';
+      parent.appendChild(p);
+    }
+  });
+  document.querySelectorAll('.category-count').forEach((el) => { el.textContent = '0'; });
+
+  // Pagination footers that claim rows we no longer show.
+  document.querySelectorAll('*').forEach((el) => {
+    if (el.children.length === 0 && /^Showing \d+ of \d+ assets$/.test((el.textContent || '').trim())) {
+      el.textContent = 'Showing 0 of 0 assets';
+    }
+  });
+
+  // ── 10. Brand identity radar reflects real category progress ──
+  const radar = document.querySelector('.radar-svg, .radar-body svg');
+  if (radar && c.approved === 0) {
+    radar.querySelectorAll('polygon[fill], polyline, path[fill]').forEach((shape) => {
+      const f = shape.getAttribute('fill');
+      if (f && f !== 'none') { shape.setAttribute('fill', 'none'); }
+      shape.setAttribute('opacity', '0.15');
+    });
+    radar.querySelectorAll('circle').forEach((dot) => {
+      if (parseFloat(dot.getAttribute('r') || '0') <= 5) dot.setAttribute('opacity', '0.15');
     });
   }
 });
