@@ -41,10 +41,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { company_url } = await req.json();
+    let { company_url } = await req.json();
     if (!company_url || typeof company_url !== 'string') {
       return jsonResponse({ error: 'company_url is required' }, 400);
     }
+    company_url = company_url.trim();
+    // Accept "olanzo.cr" as well as a full URL; upgrade bare http:// to https://.
+    if (!/^https?:\/\//i.test(company_url)) company_url = 'https://' + company_url;
+    else company_url = company_url.replace(/^http:\/\//i, 'https://');
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -67,7 +71,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Could not resolve the calling user.' }, 401);
     }
 
-    const rl = await checkRateLimit(`scrape:${userData.user.id}`, 3, 3600);
+    const rl = await checkRateLimit(`scrape:${userData.user.id}`, 15, 3600);
     if (!rl.allowed) return tooManyRequests(rl.retryAfter, corsHeaders);
     const workspaceId = userData.user.app_metadata?.workspace_id;
     if (!workspaceId) {
