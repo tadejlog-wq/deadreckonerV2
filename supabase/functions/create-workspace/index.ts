@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { company_name, company_url } = await req.json();
+    const { company_name, company_url, industry, company_size, owner_role } = await req.json();
     if (!company_name || typeof company_name !== 'string') {
       return jsonResponse({ error: 'company_name is required' }, 400);
     }
@@ -55,16 +55,33 @@ Deno.serve(async (req) => {
     if (!rl.allowed) return tooManyRequests(rl.retryAfter, corsHeaders);
     const user = userData.user;
 
-    if (user.app_metadata?.workspace_id) {
-      return jsonResponse({ error: 'This user already belongs to a workspace.', workspace_id: user.app_metadata.workspace_id }, 409);
-    }
-
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // A token can still carry workspace_id after the row was deleted or
+    // membership revoked. Verify against the database before refusing.
+    const claimedWs = user.app_metadata?.workspace_id;
+    if (claimedWs) {
+      const { data: existing } = await adminClient
+        .from('workspaces').select('id').eq('id', claimedWs).maybeSingle();
+      if (existing) {
+        return jsonResponse({ error: 'This user already belongs to a workspace.', workspace_id: claimedWs }, 409);
+      }
+      // Stale claim — clear it and continue so the user can start fresh.
+      await adminClient.auth.admin.updateUserById(user.id, {
+        app_metadata: { ...user.app_metadata, workspace_id: null, role: null }
+      });
+    }
 
     // 1. Create the workspace.
     const { data: workspace, error: wsError } = await adminClient
       .from('workspaces')
-      .insert({ name: company_name, company_url: company_url || null })
+      .insert({
+        name: company_name,
+        company_url: company_url || null,
+        industry: industry || null,
+        company_size: company_size || null,
+        owner_role: owner_role || null
+      })
       .select()
       .single();
 
@@ -94,7 +111,7 @@ Deno.serve(async (req) => {
       workspace_id: workspace.id,
       user_id: user.id,
       event_type: 'workspace.created',
-      metadata: { company_name, company_url }
+      metadata: { company_name, company_url, industry, company_size, owner_role }
     });
 
     return jsonResponse({ workspace_id: workspace.id });
