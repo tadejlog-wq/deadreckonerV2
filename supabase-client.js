@@ -288,7 +288,16 @@ async function dbCreateWorkspace(companyName, companyUrl) {
     body: { company_name: companyName, company_url: companyUrl }
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    let detail = error.message;
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const body = await error.context.json();
+        if (body && body.error) detail = body.error;
+      }
+    } catch (e) { /* keep generic */ }
+    return { error: detail };
+  }
 
   // The user's session JWT was issued before app_metadata.workspace_id existed —
   // refresh it now, or every RLS-scoped call made right after this will fail.
