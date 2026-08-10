@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /$
+Allow: /index.html
+Allow: /privacy.html
+Allow: /terms.html
+
+# Authenticated application pages — never index.
+Disallow: /dashboard.html
+Disallow: /brand.html
+Disallow: /approvals.html
+Disallow: /assets.html
+Disallow: /governance.html
+Disallow: /profile-settings.html
+Disallow: /credit-ledger.html
+Disallow: /brand-guidelines.html
+Disallow: /templates/
+Disallow: /backend/
+Disallow: /supabase/
+
+Sitemap: https://tadejlog-wq.github.io/deadreckonerV2/sitemap.xml
