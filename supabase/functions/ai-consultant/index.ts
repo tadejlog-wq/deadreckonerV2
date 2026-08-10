@@ -76,10 +76,16 @@ Context for this workspace: ${brandContext}
 
 Keep responses concise and practical — this is a chat panel, not a report. If the user asks you to generate an asset, describe what you'd produce and note that actual file generation happens through the taxonomy grid's upload flow, not directly in this chat. If asked about brand rules, be specific about what's approved versus still open.`;
 
-    const messages = [
-      ...(Array.isArray(conversation_history) ? conversation_history : []),
-      { role: 'user', content: message }
-    ];
+    // Cost control: history is resent every turn, so unbounded growth makes
+    // spend scale quadratically. Cap turns and per-message length.
+    const MAX_TURNS = 20;
+    const MAX_CHARS = 4000;
+    const trimmed = (Array.isArray(conversation_history) ? conversation_history : [])
+      .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+      .slice(-MAX_TURNS)
+      .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+
+    const messages = [...trimmed, { role: 'user', content: String(message).slice(0, MAX_CHARS) }];
 
     const result = await callLLM(systemPrompt, messages, 1024);
 
