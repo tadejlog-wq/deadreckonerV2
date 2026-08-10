@@ -325,7 +325,18 @@ async function dbStartOnboardingScrape(companyUrl) {
     body: { company_url: companyUrl }
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    // functions.invoke reports only "non-2xx status code"; the useful
+    // message is in the response body, so read it out.
+    let detail = error.message;
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const body = await error.context.json();
+        if (body && body.error) detail = body.error;
+      }
+    } catch (e) { /* keep generic */ }
+    return { error: detail };
+  }
   return { data };
 }
 
