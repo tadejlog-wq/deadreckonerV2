@@ -86,5 +86,7 @@
     });
   }
   window.drRenderTemplates = render;
-  document.addEventListener('DOMContentLoaded', function(){ setTimeout(render, 100); });
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ if (Array.isArray(window.drTemplates) && window.drTemplates.length) render(); }, 400);
+  });
 }());

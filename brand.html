@@ -76,7 +76,7 @@
       --modal-inner-radius: 24px;
       --type-display: 1.85rem;
       --type-heading: 0.95rem;
-      --type-body: 0.78rem;
+      --type-body: 0.875rem;
       --type-small: 0.72rem;
       --type-caption: 0.65rem;
       --type-micro: 0.60rem;
@@ -2013,7 +2013,7 @@
     :root {
       --panel-2: #121415;
       --panel-3: #171a1b;
-      --line: rgba(255,255,255,.095);
+      --line: rgba(255,255,255,.2);
       --line-low: rgba(255,255,255,.045);
       --text: rgba(245,245,245,.78);
       --text-soft: rgba(245,245,245,.48);
@@ -3173,12 +3173,21 @@
     @media (max-width: 860px) { .flow-track { grid-template-columns: 1fr 1fr; }
       .flow-step:not(:last-child)::after { display: none; }
       .gate-row { grid-template-columns: 1fr; gap: 3px; } }
+    /* The centred dock covered content. Edge-dock it instead. */
+    .side-dock, .side-dock:hover:not(.force-closed), .side-dock.is-open:not(.force-closed) {
+      left: auto; right: 20px; bottom: 88px; transform: none;
+    }
+    @media (max-width: 620px) {
+      .side-dock, .side-dock:hover:not(.force-closed) {
+        left: 50%; right: auto; bottom: 14px; transform: translateX(-50%);
+      }
+    }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
+<aside class="side-dock" id="sideDock"></aside>
 <header class="topbar">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
       <img src="logo-mark-white.png" alt="" aria-hidden="true">
@@ -3192,7 +3201,7 @@
     <div class="topbar-spacer"></div>
   </header>
 
-  <main id="main-content" class="app-main">
+  <main id="main-content" tabindex="-1" class="app-main">
     <div class="dashboard brand-page">
 
       <!-- HERO -->

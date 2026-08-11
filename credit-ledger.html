@@ -67,7 +67,7 @@
       --chip-radius: 4px;
       --type-display: 1.85rem;
       --type-heading: 0.95rem;
-      --type-body: 0.78rem;
+      --type-body: 0.875rem;
       --type-small: 0.72rem;
       --type-caption: 0.65rem;
       --type-micro: 0.60rem;
@@ -2029,7 +2029,7 @@
     :root {
       --panel-2: #121415;
       --panel-3: #171a1b;
-      --line: rgba(255,255,255,.095);
+      --line: rgba(255,255,255,.2);
       --line-low: rgba(255,255,255,.045);
       --text: rgba(245,245,245,.78);
       --text-soft: rgba(245,245,245,.48);
@@ -3016,6 +3016,15 @@
     }
   
     .skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 20px;background:#14B0A0;color:#07110f;font-weight:600;font-size:14px;border-radius:0 0 6px 0;text-decoration:none}.skip-link:focus{left:0}
+    /* The centred dock covered content. Edge-dock it instead. */
+    .side-dock, .side-dock:hover:not(.force-closed), .side-dock.is-open:not(.force-closed) {
+      left: auto; right: 20px; bottom: 88px; transform: none;
+    }
+    @media (max-width: 620px) {
+      .side-dock, .side-dock:hover:not(.force-closed) {
+        left: 50%; right: auto; bottom: 14px; transform: translateX(-50%);
+      }
+    }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js"></script>
 </head>
@@ -3023,7 +3032,7 @@
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- FLOATING PILL DOCK -->
-<aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
+<aside class="side-dock" id="sideDock"></aside>
 
   <header class="topbar">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
@@ -3038,7 +3047,7 @@
     <div class="topbar-spacer"></div>
   </header>
 
-  <main id="main-content" class="app-main">
+  <main id="main-content" tabindex="-1" class="app-main">
 <style>
   .ledger-shell{--teal:#14B0A0;--euca:#6B9E87;--clay:#B87A6A;--text-primary:#F2F4F5;--text-secondary:#8B9196;--text-muted:#5A6066;font-family:"IBM Plex Sans", "IBM Plex Sans Fallback", sans-serif;color:var(--text-primary)}
   .ledger-shell .panel{background:rgba(22,22,28,0.55);border:1px solid rgba(255,255,255,0.09);backdrop-filter:blur(28px) saturate(160%) brightness(0.82);-webkit-backdrop-filter:blur(28px) saturate(160%) brightness(0.82);border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -1px 0 rgba(0,0,0,.28),0 4px 24px rgba(0,0,0,.5),0 1px 4px rgba(0,0,0,.3)}

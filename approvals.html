@@ -55,7 +55,7 @@
       --chip-radius: 4px;
       --type-display: 1.85rem;
       --type-heading: 0.95rem;
-      --type-body: 0.78rem;
+      --type-body: 0.875rem;
       --type-small: 0.72rem;
       --type-caption: 0.65rem;
       --type-micro: 0.60rem;
@@ -2017,7 +2017,7 @@
     :root {
       --panel-2: #121415;
       --panel-3: #171a1b;
-      --line: rgba(255,255,255,.095);
+      --line: rgba(255,255,255,.2);
       --line-low: rgba(255,255,255,.045);
       --text: rgba(245,245,245,.78);
       --text-soft: rgba(245,245,245,.48);
@@ -3328,7 +3328,7 @@
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<aside class="side-dock" id="sideDock" aria-label="Primary navigation"></aside>
+<aside class="side-dock" id="sideDock"></aside>
 
 <header class="topbar">
     <a class="topbar-logo" href="dashboard.html" aria-label="Deadreckoner home">
@@ -3343,7 +3343,7 @@
     <div class="topbar-spacer"></div>
   </header>
 
-  <main id="main-content" class="app-main">
+  <main id="main-content" tabindex="-1" class="app-main">
     <div class="dashboard">
 
       <!-- PAGE HERO: stat strip -->

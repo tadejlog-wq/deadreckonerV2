@@ -302,11 +302,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+
+  // ── 11. Hardcoded panel badges and timestamps ────────────
+  document.querySelectorAll('.panel-meta, .panel-badge, .panel-header span, .stat-index').forEach((el) => {
+    if (el.children.length) return;
+    const t = (el.textContent || '').trim();
+    if (/^QUEUE\s+\d+$/i.test(t))  el.textContent = 'QUEUE ' + pad(c.pending);
+    else if (/^OPEN\s+\d+$/i.test(t)) el.textContent = 'OPEN ' + pad(c.open);
+    else if (/^\d+\s+FILES$/i.test(t)) el.textContent = '0 FILES';
+    else if (/^UPDATED\s+\d{2}:\d{2}\s+UTC$/i.test(t)) {
+      const now = new Date();
+      el.textContent = 'UPDATED ' + String(now.getUTCHours()).padStart(2,'0') + ':' +
+                       String(now.getUTCMinutes()).padStart(2,'0') + ' UTC';
+    }
+  });
   // ── 8. Plan + trial status banner ─────────────────────────
   if (wsId) {
     try {
-      const { data: plan } = await client
+      const { data: plan, error: planErr } = await client
         .from('workspace_plan_status').select('*').eq('workspace_id', wsId).maybeSingle();
+      if (planErr) console.warn('Deadreckoner: workspace_plan_status query failed —', planErr.message);
+      if (!plan) console.warn('Deadreckoner: no plan row for workspace', wsId);
       if (plan) {
         const seatTxt = plan.seat_limit === null
           ? `${plan.seats_used} seats`
@@ -344,7 +360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       }
-    } catch (e) { /* plan table not migrated yet — skip silently */ }
+    } catch (e) { console.warn('Deadreckoner: plan status unavailable —', e && e.message ? e.message : e); }
   }
 
   // ── 9. Widget-specific clears (real class names, verified in markup) ──

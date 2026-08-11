@@ -111,5 +111,9 @@
     mount.appendChild(grid);
   }
   window.drRenderFolders = render;
-  document.addEventListener('DOMContentLoaded', function(){ setTimeout(render, 100); });
+  // dr-wire.js calls drRenderFolders() once real data is loaded; a
+  // self-triggered render here would warn about missing data first.
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ if (Array.isArray(window.drFolders) && window.drFolders.length) render(); }, 400);
+  });
 }());

@@ -22,6 +22,51 @@
 const SUPABASE_URL = 'https://ksvxslxwrfembxhmavqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzdnhzbHh3cmZlbWJ4aG1hdnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMjY5MTYsImV4cCI6MjA5NzkwMjkxNn0.DK-qvbm-G6Nf8SrUf-qAaBRqoWuLuUxsmHM93SvACE0';
 
+
+// ── LAZY SDK LOADING ──────────────────────────────────────
+// The landing page does not load the Supabase SDK up front. Most visitors
+// never sign in, so ~220KB of parse-and-execute is kept off the critical
+// path and fetched only when an auth action actually needs it.
+const SDK_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js';
+let _sdkPromise = null;
+
+function ensureSdk() {
+  if (typeof window.supabase !== 'undefined') return Promise.resolve(true);
+  if (_sdkPromise) return _sdkPromise;
+  _sdkPromise = new Promise((resolve) => {
+    const existing = document.querySelector('script[data-dr-sdk]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true));
+      existing.addEventListener('error', () => resolve(false));
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = SDK_URL;
+    s.crossOrigin = 'anonymous';
+    s.setAttribute('data-dr-sdk', '');
+    s.onload = () => resolve(true);
+    s.onerror = () => { console.error('Supabase SDK failed to load.'); resolve(false); };
+    document.head.appendChild(s);
+  });
+  return _sdkPromise;
+}
+
+// True when a session token is already in storage — lets the landing page
+// decide whether to preload the SDK without downloading it to find out.
+function hasStoredSession() {
+  try {
+    const ref = (SUPABASE_URL.match(/https:\/\/([^.]+)\./) || [])[1];
+    if (!ref) return false;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('sb-') === 0 && k.indexOf(ref) !== -1 && k.indexOf('auth-token') !== -1) {
+        return true;
+      }
+    }
+  } catch (e) { /* storage blocked */ }
+  return false;
+}
+
 let _client = null;
 
 function getClient() {
@@ -422,6 +467,8 @@ async function dbSubmitFeedback({ kind, score, comment, context }) {
 // Expose on window so existing inline scripts can call these without a bundler.
 window.deadreckonerDB = {
   getClient,
+  ensureSdk,
+  hasStoredSession,
   exportMyData: dbExportMyData,
   eraseMyData: dbEraseMyData,
   submitFeedback: dbSubmitFeedback,

@@ -74,3 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   if (slot) slot.appendChild(bulk);
 });
+
+// Keyboard activation for the sidebar rows that were pointer-only.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest && e.target.closest('[role="button"][tabindex="0"]');
+  if (!el) return;
+  e.preventDefault();
+  el.click();
+});
