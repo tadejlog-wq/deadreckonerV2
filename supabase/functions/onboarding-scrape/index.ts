@@ -89,7 +89,18 @@ Deno.serve(async (req) => {
     let html: string;
     let fetchMeta: Record<string, unknown> = {};
     try {
-      const r = await safeFetchPage(company_url);
+      let r;
+      try {
+        r = await safeFetchPage(company_url);
+      } catch (first) {
+        const m = first instanceof Error ? first.message : '';
+        if (/timed out|TimeoutError|aborted|body read failed/i.test(m)) {
+          console.log('scrape retry after:', m);
+          r = await safeFetchPage(company_url);
+        } else {
+          throw first;
+        }
+      }
       html = r.body;
       fetchMeta = { final_url: r.finalUrl, content_type: r.contentType, html_bytes: r.body.length, redirects: r.hops };
       console.log('scrape fetch ok:', JSON.stringify(fetchMeta));
@@ -186,7 +197,7 @@ function jsonResponse(body: unknown, status = 200) {
 // ── SSRF HARDENING ────────────────────────────────────────
 const MAX_BYTES = 2_000_000;
 const MAX_REDIRECTS = 2;
-const FETCH_TIMEOUT_MS = 20000;
+const FETCH_TIMEOUT_MS = 45000;
 
 function isBlockedIp(ip: string): boolean {
   if (ip.includes(':')) {
@@ -264,21 +275,14 @@ async function safeFetchPage(rawUrl: string): Promise<{ body: string; finalUrl: 
     const ct = (res.headers.get('content-type') || '').toLowerCase();
     if (!ct.includes('text/html') && !ct.includes('application/xhtml')) throw new Error('not html');
 
-    const reader = res.body?.getReader();
-    if (!reader) throw new Error('empty body');
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.length;
-      if (total > MAX_BYTES) { await reader.cancel(); break; }
-      chunks.push(value);
+    let text = '';
+    try {
+      text = await res.text();
+    } catch (e) {
+      throw new Error('body read failed');
     }
-    const buf = new Uint8Array(total > MAX_BYTES ? MAX_BYTES : total);
-    let off = 0;
-    for (const c of chunks) { buf.set(c.subarray(0, Math.min(c.length, buf.length - off)), off); off += c.length; if (off >= buf.length) break; }
-    return { body: new TextDecoder().decode(buf), finalUrl: u.toString(), contentType: ct, hops: hop };
+    if (text.length > MAX_BYTES) text = text.slice(0, MAX_BYTES);
+    return { body: text, finalUrl: u.toString(), contentType: ct, hops: hop };
   }
   throw new Error('too many redirects');
 }
